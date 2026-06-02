@@ -5,14 +5,19 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.example.raktasewa.ui.screens.LanguageSelectionScreen
+import com.example.raktasewa.ui.screens.SelectBloodGroupScreen
 import com.example.raktasewa.ui.theme.RaktaSewaTheme
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,16 +29,45 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    var currentScreen by remember { mutableStateOf("language_selection") }
+                    var selectedLanguage by remember { mutableStateOf("") }
                     val context = LocalContext.current
-                    LanguageSelectionScreen(
-                        onLanguageSelected = { lang ->
-                            Toast.makeText(
-                                context,
-                                "Language set to: ${if (lang == "en") "English" else "नेपाली"}",
-                                Toast.LENGTH_SHORT
-                            ).show()
+
+                    AnimatedContent(
+                        targetState = currentScreen,
+                        transitionSpec = {
+                            fadeIn().togetherWith(fadeOut())
+                        },
+                        label = "screen_transition"
+                    ) { screen ->
+                        when (screen) {
+                            "language_selection" -> {
+                                LanguageSelectionScreen(
+                                    onLanguageSelected = { lang ->
+                                        selectedLanguage = lang
+                                        currentScreen = "select_blood_group"
+                                    }
+                                )
+                            }
+                            "select_blood_group" -> {
+                                SelectBloodGroupScreen(
+                                    onBackClick = {
+                                        currentScreen = "language_selection"
+                                    },
+                                    onProfileClick = {
+                                        Toast.makeText(context, "Profile clicked", Toast.LENGTH_SHORT).show()
+                                    },
+                                    onFindNearbyClick = { bloodGroup ->
+                                        Toast.makeText(
+                                            context,
+                                            "Searching for $bloodGroup in ${if (selectedLanguage == "en") "English" else "Nepali"}",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                )
+                            }
                         }
-                    )
+                    }
                 }
             }
         }
