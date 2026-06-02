@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VitalFlow - Language Selection</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "secondary-fixed": "#d5e3ff",
+                "secondary-container": "#bbd3fd",
+                "secondary": "#485f84",
+                "on-surface": "#171c1f",
+                "surface-variant": "#dfe3e7",
+                "primary-fixed": "#ffdad8",
+                "on-primary-fixed-variant": "#92001c",
+                "surface-bright": "#f6fafe",
+                "primary": "#b7102a",
+                "on-tertiary-fixed-variant": "#064c6b",
+                "secondary-fixed-dim": "#b0c7f1",
+                "on-background": "#171c1f",
+                "surface-container-lowest": "#ffffff",
+                "on-error-container": "#93000a",
+                "surface-container-highest": "#dfe3e7",
+                "on-secondary": "#ffffff",
+                "on-surface-variant": "#5b403f",
+                "primary-fixed-dim": "#ffb3b1",
+                "on-secondary-container": "#445a7f",
+                "background": "#f6fafe",
+                "error": "#ba1a1a",
+                "surface": "#f6fafe",
+                "on-tertiary-fixed": "#001e2e",
+                "surface-container-high": "#e4e9ed",
+                "inverse-primary": "#ffb3b1",
+                "surface-container-low": "#f0f4f8",
+                "tertiary-fixed-dim": "#98cdf2",
+                "on-primary": "#ffffff",
+                "primary-container": "#db313f",
+                "inverse-on-surface": "#edf1f5",
+                "on-primary-fixed": "#410007",
+                "tertiary-container": "#447a9c",
+                "tertiary-fixed": "#c7e7ff",
+                "outline": "#8f6f6e",
+                "inverse-surface": "#2c3134",
+                "on-primary-container": "#fffbff",
+                "on-error": "#ffffff",
+                "surface-tint": "#bb152c",
+                "surface-dim": "#d6dade",
+                "on-tertiary": "#ffffff",
+                "outline-variant": "#e4bebc",
+                "on-tertiary-container": "#fcfcff",
+                "error-container": "#ffdad6",
+                "surface-container": "#eaeef2",
+                "on-secondary-fixed": "#001b3c",
+                "on-secondary-fixed-variant": "#30476a",
+                "tertiary": "#286182"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "spacing": {
+                "margin-mobile": "20px",
+                "base": "8px",
+                "gutter": "12px",
+                "stack-md": "16px",
+                "stack-lg": "32px",
+                "touch-target": "48px",
+                "stack-sm": "4px"
+            },
+            "fontFamily": {
+                "body-lg": ["Inter"],
+                "nepali-body": ["Inter"],
+                "headline-xl": ["Inter"],
+                "label-md": ["Inter"],
+                "body-md": ["Inter"],
+                "title-md": ["Inter"],
+                "headline-lg-mobile": ["Inter"],
+                "headline-lg": ["Inter"]
+            },
+            "fontSize": {
+                "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "nepali-body": ["16px", {"lineHeight": "28px", "fontWeight": "400"}],
+                "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                "title-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                "headline-lg-mobile": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+                "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hero-pattern {
+            background-color: #f6fafe;
+            background-image: radial-gradient(#dfe3e7 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-lg min-h-screen flex flex-col items-center hero-pattern">
+<!-- Top Navigation Shell (Suppressed as per rules for transactional/onboarding screens, but here we manually render a simplified brand anchor) -->
+<header class="w-full top-0 sticky flex justify-center items-center px-margin-mobile h-touch-target bg-surface/80 backdrop-blur-md z-50">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary font-extrabold tracking-tight">VitalFlow</h1>
+</header>
+<main class="flex-1 w-full max-w-md px-margin-mobile flex flex-col justify-center items-center py-stack-lg">
+<!-- Hero Visual Section -->
+<div class="w-full flex flex-col items-center mb-stack-lg animate-in fade-in slide-in-from-bottom-4 duration-700">
+<div class="relative w-48 h-48 mb-stack-md rounded-full overflow-hidden shadow-lg border-4 border-white">
+<img class="w-full h-full object-cover" data-alt="A clean, medical-themed close-up of a glass blood storage container with professional studio lighting. The scene is bright and clinical, using a palette of sterile whites and soft grays, with the deep life-red of the liquid serving as a powerful focal point. The composition is minimalist and high-end, evoking a sense of urgent but calm healthcare efficiency." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAoruTLRcHi2CpSk8mQ5kBr3FHTsOLuNhqE6MnPNL9QSlu8_yVxIl13GA5XS3ylR8PTdvYivWovi89xdt4APamga-PUH1yRsLjshM6dgjNI5eU6K3Hccrb8RwUkusuERSN6L66BTrQzD_ZaD8jVg6IY87aOsJNiAt6dAfiWMX_LMhuDdNb7VjUy9x9n4DS7pFhzTLdRzJ3DSJSMRTN6PbIHQnAvk9vG13vwoxnLevf9rjjaMm0nJlR7MSHxzjpvwGGwIjuWH6ZKQon"/>
+</div>
+<div class="text-center">
+<h2 class="font-headline-xl text-headline-xl text-on-surface mb-2">Welcome</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-[280px]">Please select your preferred language to continue.</p>
+</div>
+</div>
+<!-- Language Options Container -->
+<div class="w-full space-y-stack-md">
+<!-- English Button -->
+<button class="group w-full h-[88px] flex items-center justify-between px-6 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm hover:border-primary hover:bg-primary-fixed/30 transition-all duration-200 active:scale-[0.98]" onclick="selectLanguage('en')">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[28px]">language</span>
+</div>
+<div class="text-left">
+<span class="block font-title-md text-title-md text-on-surface">English</span>
+<span class="block font-label-md text-label-md text-on-surface-variant">Default Language</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
+</button>
+<!-- Nepali Button -->
+<button class="group w-full h-[88px] flex items-center justify-between px-6 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm hover:border-primary hover:bg-primary-fixed/30 transition-all duration-200 active:scale-[0.98]" onclick="selectLanguage('ne')">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[28px]" data-weight="fill" style="font-variation-settings: 'FILL' 1;">translate</span>
+</div>
+<div class="text-left">
+<span class="block font-title-md text-title-md text-on-surface">नेपाली</span>
+<span class="block font-nepali-body text-label-md text-on-surface-variant">स्थानीय भाषा</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
+</button>
+</div>
+<!-- Bottom Assistance Text -->
+<div class="mt-stack-lg text-center">
+<p class="font-body-md text-body-md text-on-surface-variant opacity-60">
+                You can change this anytime in settings.
+            </p>
+</div>
+</main>
+<!-- Success Modal (Hidden by default) -->
+<div class="fixed inset-0 bg-on-surface/20 backdrop-blur-sm z-[100] flex items-center justify-center hidden" id="loading-overlay">
+<div class="bg-surface p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300">
+<div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+<p class="font-title-md text-title-md text-primary">Setting things up...</p>
+</div>
+</div>
+<script>
+        function selectLanguage(lang) {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.classList.remove('hidden');
+            
+            // Simulate navigation/logic delay
+            setTimeout(() => {
+                console.log('Language selected:', lang);
+                // In a real app, we would route to the next onboarding step or home
+                // window.location.href = '/onboarding';
+                overlay.classList.add('hidden');
+                alert(`Language set to ${lang === 'en' ? 'English' : 'नेपाली'}. Redirecting to dashboard...`);
+            }, 1500);
+        }
+
+        // Add subtle hover tracking for interactive elements
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousemove', (e) => {
+                const rect = button.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                button.style.setProperty('--mouse-x', `${x}px`);
+                button.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+    </script>
+</body></html>
