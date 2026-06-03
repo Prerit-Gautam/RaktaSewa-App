@@ -46,7 +46,7 @@ fun SelectBloodGroupScreen(
             BloodGroupItem("A-", "Negative"),
             BloodGroupItem("B+", "Positive"),
             BloodGroupItem("B-", "Negative"),
-            BloodGroupItem("O+", "Positive"),
+            BloodGroupItem("O+", "Positxive"),
             BloodGroupItem("O-", "Negative"),
             BloodGroupItem("AB+", "Positive"),
             BloodGroupItem("AB-", "Negative")

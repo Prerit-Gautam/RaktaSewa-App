@@ -17,6 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.example.raktasewa.ui.screens.LanguageSelectionScreen
 import com.example.raktasewa.ui.screens.SelectBloodGroupScreen
+import com.example.raktasewa.ui.screens.FindingBloodBanksScreen
+import com.example.raktasewa.ui.screens.NearbyBloodBanksScreen
+import androidx.activity.compose.BackHandler
 import com.example.raktasewa.ui.theme.RaktaSewaTheme
 
 class MainActivity : ComponentActivity() {
@@ -31,6 +34,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     var currentScreen by remember { mutableStateOf("language_selection") }
                     var selectedLanguage by remember { mutableStateOf("") }
+                    var selectedBloodGroup by remember { mutableStateOf("") }
                     val context = LocalContext.current
 
                     AnimatedContent(
@@ -58,11 +62,31 @@ class MainActivity : ComponentActivity() {
                                         Toast.makeText(context, "Profile clicked", Toast.LENGTH_SHORT).show()
                                     },
                                     onFindNearbyClick = { bloodGroup ->
-                                        Toast.makeText(
-                                            context,
-                                            "Searching for $bloodGroup in ${if (selectedLanguage == "en") "English" else "Nepali"}",
-                                            Toast.LENGTH_LONG
-                                        ).show()
+                                        selectedBloodGroup = bloodGroup
+                                        currentScreen = "finding_blood_banks"
+                                    }
+                                )
+                            }
+                            "finding_blood_banks" -> {
+                                BackHandler {
+                                    currentScreen = "select_blood_group"
+                                }
+                                LaunchedEffect(Unit) {
+                                    kotlinx.coroutines.delay(4000)
+                                    currentScreen = "nearby_blood_banks"
+                                }
+                                FindingBloodBanksScreen(
+                                    selectedBloodGroup = selectedBloodGroup
+                                )
+                            }
+                            "nearby_blood_banks" -> {
+                                NearbyBloodBanksScreen(
+                                    selectedBloodGroup = selectedBloodGroup,
+                                    onBackClick = {
+                                        currentScreen = "select_blood_group"
+                                    },
+                                    onProfileClick = {
+                                        Toast.makeText(context, "Profile clicked", Toast.LENGTH_SHORT).show()
                                     }
                                 )
                             }
