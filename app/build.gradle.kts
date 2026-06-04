@@ -1,6 +1,15 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+}
+
+// Read .env file
+val envFile = rootProject.file(".env")
+val envProperties = Properties()
+if (envFile.exists()) {
+    envFile.inputStream().use { envProperties.load(it) }
 }
 
 android {
@@ -19,6 +28,13 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Inject BASE_URL from .env into BuildConfig
+        buildConfigField(
+            "String",
+            "BASE_URL",
+            "\"${envProperties.getProperty("BASE_URL", "https://raktakosh-backend.onrender.com/")}\""
+        )
     }
 
     buildTypes {
@@ -36,6 +52,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -51,6 +68,22 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     implementation("androidx.compose.material:material-icons-extended")
+
+    // Networking — Retrofit + Gson
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Location — Google Play Services
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
+    // Coroutines Play Services (for .await() on Tasks)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")
+
+    // Lifecycle ViewModel Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

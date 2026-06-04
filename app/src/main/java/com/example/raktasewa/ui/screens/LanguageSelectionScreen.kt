@@ -74,14 +74,24 @@ fun LanguageSelectionScreen(
                     .height(48.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "RaktaSewa",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = (-0.5).sp
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "🩸",
+                        fontSize = 24.sp,
+                        modifier = Modifier.padding(end = 6.dp)
                     )
-                )
+                    Text(
+                        text = "RaktaSewa",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = (-0.5).sp
+                        )
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.weight(0.5f))
@@ -91,26 +101,11 @@ fun LanguageSelectionScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(192.dp)
-                        .clip(CircleShape)
-                        .border(4.dp, Color.White, CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    AsyncImage(
-                        model = "https://lh3.googleusercontent.com/aida-public/AB6AXuBAoruTLRcHi2CpSk8mQ5kBr3FHTsOLuNhqE6MnPNL9QSlu8_yVxIl13GA5XS3ylR8PTdvYivWovi89xdt4APamga-PUH1yRsLjshM6dgjNI5eU6K3Hccrb8RwUkusuERSN6L66BTrQzD_ZaD8jVg6IY87aOsJNiAt6dAfiWMX_LMhuDdNb7VjUy9x9n4DS7pFhzTLdRzJ3DSJSMRTN6PbIHQnAvk9vG13vwoxnLevf9rjjaMm0nJlR7MSHxzjpvwGGwIjuWH6ZKQon",
-                        contentDescription = "Blood storage container",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Welcome",
+                    text = if (selectedLanguage == "ne") "स्वागत छ" else "Welcome",
                     style = MaterialTheme.typography.displaySmall.copy(
                         color = MaterialTheme.colorScheme.onSurface
                     ),
@@ -120,7 +115,7 @@ fun LanguageSelectionScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Please select your preferred language to continue.",
+                    text = if (selectedLanguage == "ne") "अगाडि बढ्नको लागि कृपया आफ्नो मनपर्ने भाषा चयन गर्नुहोस्।" else "Please select your preferred language to continue.",
                     style = MaterialTheme.typography.bodyLarge.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
@@ -141,11 +136,10 @@ fun LanguageSelectionScreen(
                     title = "English",
                     subtitle = "Default Language",
                     icon = {
-                        Icon(
-                            imageVector = Icons.Default.Language,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(28.dp)
+                        Text(
+                            text = "🇬🇧",
+                            fontSize = 28.sp,
+                            textAlign = TextAlign.Center
                         )
                     },
                     onClick = { selectedLanguage = "en" }
@@ -156,11 +150,10 @@ fun LanguageSelectionScreen(
                     title = "नेपाली",
                     subtitle = "स्थानीय भाषा",
                     icon = {
-                        Icon(
-                            imageVector = Icons.Default.Translate,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(28.dp)
+                        Text(
+                            text = "🇳🇵",
+                            fontSize = 28.sp,
+                            textAlign = TextAlign.Center
                         )
                     },
                     onClick = { selectedLanguage = "ne" }
@@ -171,7 +164,7 @@ fun LanguageSelectionScreen(
 
             // Bottom Assistance Text
             Text(
-                text = "You can change this anytime in settings.",
+                text = if (selectedLanguage == "ne") "तपाईंले यसलाई सेटिङहरूमा जुनसुकै बेला परिवर्तन गर्न सक्नुहुन्छ।" else "You can change this anytime in settings.",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 ),
@@ -212,7 +205,7 @@ fun LanguageSelectionScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Setting things up...",
+                            text = if (selectedLanguage == "ne") "सेटअप हुँदैछ..." else "Setting things up...",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 color = MaterialTheme.colorScheme.primary
                             ),

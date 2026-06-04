@@ -34,37 +34,47 @@ import com.example.raktasewa.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectBloodGroupScreen(
+    language: String,
     onBackClick: () -> Unit,
-    onProfileClick: () -> Unit,
     onFindNearbyClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var selectedGroup by remember { mutableStateOf<String?>(null) }
-    val bloodGroups = remember {
+    val bloodGroups = remember(language) {
         listOf(
-            BloodGroupItem("A+", "Positive"),
-            BloodGroupItem("A-", "Negative"),
-            BloodGroupItem("B+", "Positive"),
-            BloodGroupItem("B-", "Negative"),
-            BloodGroupItem("O+", "Positxive"),
-            BloodGroupItem("O-", "Negative"),
-            BloodGroupItem("AB+", "Positive"),
-            BloodGroupItem("AB-", "Negative")
+            BloodGroupItem("A+", Loc.t("positive", language)),
+            BloodGroupItem("A-", Loc.t("negative", language)),
+            BloodGroupItem("B+", Loc.t("positive", language)),
+            BloodGroupItem("B-", Loc.t("negative", language)),
+            BloodGroupItem("O+", Loc.t("positive", language)),
+            BloodGroupItem("O-", Loc.t("negative", language)),
+            BloodGroupItem("AB+", Loc.t("positive", language)),
+            BloodGroupItem("AB-", Loc.t("negative", language))
         )
     }
 
     Scaffold(
-        topBar = {
+topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(
-                        text = "RaktaSewa",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = (-0.5).sp
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "🩸",
+                            fontSize = 24.sp,
+                            modifier = Modifier.padding(end = 6.dp)
                         )
-                    )
+                        Text(
+                            text = "RaktaSewa",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = (-0.5).sp
+                            )
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(
@@ -78,19 +88,7 @@ fun SelectBloodGroupScreen(
                         )
                     }
                 },
-                actions = {
-                    IconButton(
-                        onClick = onProfileClick,
-                        modifier = Modifier.padding(end = 4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AccountCircle,
-                            contentDescription = "Profile",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                },
+                actions = {},
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -135,19 +133,18 @@ fun SelectBloodGroupScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "Find Nearby",
+                                text = Loc.t("find_nearby", language),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
+                            Text(
+                                text = "🩸",
+                                fontSize = 18.sp
                             )
                         }
                     }
                     Text(
-                        text = "Securely encrypted selection",
+                        text = Loc.t("secure_selection", language),
                         style = MaterialTheme.typography.labelMedium.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -167,7 +164,7 @@ fun SelectBloodGroupScreen(
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = "Select Your Blood Group",
+                text = Loc.t("select_blood_group", language),
                 style = MaterialTheme.typography.displaySmall.copy(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -178,7 +175,7 @@ fun SelectBloodGroupScreen(
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                text = "Choose your blood type to see compatible donors and nearby medical centers.",
+                text = Loc.t("select_blood_group_sub", language),
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
@@ -210,6 +207,7 @@ fun SelectBloodGroupScreen(
                     
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         InfoTipCard(
+                            language = language,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -283,6 +281,7 @@ fun BloodGroupCard(
 
 @Composable
 fun InfoTipCard(
+    language: String,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -293,15 +292,14 @@ fun InfoTipCard(
             .padding(16.dp),
         verticalAlignment = Alignment.Top
     ) {
-        Icon(
-            imageVector = Icons.Default.Info,
-            contentDescription = null,
-            tint = OnSecondaryFixed,
-            modifier = Modifier.size(24.dp)
+        Text(
+            text = "🩸",
+            fontSize = 20.sp,
+            modifier = Modifier.padding(top = 2.dp)
         )
         Spacer(modifier = Modifier.width(16.dp))
         Text(
-            text = "Choosing your correct blood type ensures that search results show hospitals with the specific inventory you need.",
+            text = Loc.t("info_tip", language),
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = OnSecondaryFixedVariant,
                 lineHeight = 20.sp
@@ -315,8 +313,8 @@ fun InfoTipCard(
 fun SelectBloodGroupScreenPreview() {
     RaktaSewaTheme {
         SelectBloodGroupScreen(
+            language = "en",
             onBackClick = {},
-            onProfileClick = {},
             onFindNearbyClick = {}
         )
     }

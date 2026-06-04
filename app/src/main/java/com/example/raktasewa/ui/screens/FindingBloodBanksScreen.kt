@@ -8,18 +8,16 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bloodtype
-import androidx.compose.material.icons.filled.ShareLocation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.raktasewa.ui.theme.RaktaSewaTheme
 import kotlinx.coroutines.delay
+import kotlin.math.cos
+import kotlin.math.sin
 
 data class StatusText(val main: String, val sub: String)
 
@@ -36,15 +36,28 @@ data class StatusText(val main: String, val sub: String)
 @Composable
 fun FindingBloodBanksScreen(
     selectedBloodGroup: String,
+    language: String,
     modifier: Modifier = Modifier
 ) {
     // 1. Text switching transition data
-    val statuses = remember(selectedBloodGroup) {
+    val statuses = remember(selectedBloodGroup, language) {
         listOf(
-            StatusText("Finding nearest blood banks...", "Searching within 20km..."),
-            StatusText("Checking availability...", "Verifying $selectedBloodGroup stock levels..."),
-            StatusText("Optimizing routes...", "Calculating arrival time for retrieval..."),
-            StatusText("Syncing donor data...", "Connecting to regional health network...")
+            StatusText(
+                Loc.t("finding_nearest", language),
+                Loc.t("searching_within", language)
+            ),
+            StatusText(
+                Loc.t("checking_availability", language),
+                Loc.t("verifying_stock", language).replace("{group}", selectedBloodGroup)
+            ),
+            StatusText(
+                Loc.t("optimizing_routes", language),
+                Loc.t("calculating_arrival", language)
+            ),
+            StatusText(
+                Loc.t("syncing_donor", language),
+                Loc.t("connecting_health", language)
+            )
         )
     }
     var currentStatusIndex by remember { mutableStateOf(0) }
@@ -56,68 +69,64 @@ fun FindingBloodBanksScreen(
         }
     }
 
-    // 2. Ripple pulse infinite transitions
-    val rippleTransition = rememberInfiniteTransition(label = "ripple")
-    val rippleProgress1 by rippleTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "ripple1"
+    // ─── Animation drivers ───────────────────────────────────────────────────
+
+    val infiniteT = rememberInfiniteTransition(label = "master")
+
+    // Orbit angles – three independent speeds
+    val orbit1Angle by infiniteT.animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(3200, easing = LinearEasing), RepeatMode.Restart),
+        label = "orbit1"
+    )
+    val orbit2Angle by infiniteT.animateFloat(
+        initialValue = 180f, targetValue = 540f,
+        animationSpec = infiniteRepeatable(tween(4800, easing = LinearEasing), RepeatMode.Restart),
+        label = "orbit2"
+    )
+    val orbit3Angle by infiniteT.animateFloat(
+        initialValue = 90f, targetValue = 450f,
+        animationSpec = infiniteRepeatable(tween(6400, easing = LinearEasing), RepeatMode.Restart),
+        label = "orbit3"
     )
 
-    // Ripple 2 is shifted by 180 degrees (1.5 seconds delay in a 3-second cycle)
-    val rippleProgress2 = (rippleProgress1 + 0.5f) % 1.0f
-
-    // 3. Central Blood Drop Pulse Animation
-    val pulseTransition = rememberInfiniteTransition(label = "bloodDropPulse")
-    val pulseProgress by pulseTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
+    // Outer glow pulse
+    val glowScale by infiniteT.animateFloat(
+        initialValue = 0.85f, targetValue = 1.15f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
+            tween(1800, easing = FastOutSlowInEasing), RepeatMode.Reverse
         ),
-        label = "pulseProgress"
+        label = "glowPulse"
     )
-    val pulseScale = 1.0f + 0.1f * pulseProgress
-    val pulseAlpha = 1.0f - 0.2f * pulseProgress
 
-    // 4. Secure Connection Dot Animation
-    val dotTransition = rememberInfiniteTransition(label = "dotPulse")
-    val dotAlpha by dotTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 1.0f,
+    // Core inner breathe
+    val coreScale by infiniteT.animateFloat(
+        initialValue = 1.0f, targetValue = 1.12f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
+            tween(1200, easing = FastOutSlowInEasing), RepeatMode.Reverse
+        ),
+        label = "coreBreath"
+    )
+
+    // Footer dot blink
+    val dotAlpha by infiniteT.animateFloat(
+        initialValue = 0.3f, targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            tween(900, easing = FastOutSlowInEasing), RepeatMode.Reverse
         ),
         label = "dotAlpha"
     )
 
     val primaryColor = MaterialTheme.colorScheme.primary
+    val surfaceLow    = MaterialTheme.colorScheme.surfaceContainerLowest
+
+    // ─── UI ──────────────────────────────────────────────────────────────────
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Decorative background icon (share_location) with very low opacity
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(0.03f),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.ShareLocation,
-                contentDescription = null,
-                modifier = Modifier.size(400.dp),
-                tint = MaterialTheme.colorScheme.onBackground
-            )
-        }
 
         Column(
             modifier = Modifier
@@ -125,101 +134,151 @@ fun FindingBloodBanksScreen(
                 .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Main content pushes down the footer
             Spacer(modifier = Modifier.weight(1f))
 
-            // Central Animation Container (Pulsing Ripples + Center Drop)
+            // ── Central orbital animation ────────────────────────────────────
             Box(
-                modifier = Modifier.size(192.dp),
+                modifier = Modifier.size(240.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // Ripple 1
+
+                // Layer 1 – Canvas: orbits, trails, glow rings
                 Canvas(modifier = Modifier.fillMaxSize()) {
-                    val r1Scale = 0.8f + (2.5f - 0.8f) * rippleProgress1
-                    val r1Alpha = 0.5f * (1f - rippleProgress1)
-                    val radius = (size.minDimension / 2) * r1Scale
+                    val cx = size.width  / 2f
+                    val cy = size.height / 2f
+
+                    // ── Outer pulsing atmospheric glow ──────────────────────
+                    val glowRadius = (size.minDimension / 2f) * glowScale
                     drawCircle(
-                        color = primaryColor.copy(alpha = r1Alpha),
-                        radius = radius,
-                        style = Stroke(width = 2.dp.toPx())
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                primaryColor.copy(alpha = 0.08f),
+                                primaryColor.copy(alpha = 0.04f),
+                                Color.Transparent
+                            ),
+                            center = Offset(cx, cy),
+                            radius = glowRadius
+                        ),
+                        radius = glowRadius,
+                        center = Offset(cx, cy)
                     )
+
+                    // ── Three orbit rings (thin dashed-style circles) ────────
+                    val r1 = size.minDimension * 0.37f
+                    val r2 = size.minDimension * 0.27f
+                    val r3 = size.minDimension * 0.17f
+
+                    listOf(r1, r2, r3).forEach { r ->
+                        drawCircle(
+                            color = primaryColor.copy(alpha = 0.10f),
+                            radius = r,
+                            center = Offset(cx, cy),
+                            style = Stroke(width = 1.dp.toPx())
+                        )
+                    }
+
+                    // Helper: draw one orbiting drop (removed heavy trail to prevent frame drops)
+                    fun drawOrbit(angleDeg: Float, orbitRadius: Float, dropRadius: Float) {
+                        val angleRad = Math.toRadians(angleDeg.toDouble())
+
+                        // Drop head: bright core + soft glow
+                        val hx = cx + (orbitRadius * cos(angleRad)).toFloat()
+                        val hy = cy + (orbitRadius * sin(angleRad)).toFloat()
+
+                        // Glow
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    primaryColor.copy(alpha = 0.55f),
+                                    primaryColor.copy(alpha = 0.0f)
+                                ),
+                                center = Offset(hx, hy),
+                                radius = dropRadius * 2.8f
+                            ),
+                            radius = dropRadius * 2.8f,
+                            center = Offset(hx, hy)
+                        )
+
+                        // Core
+                        drawCircle(
+                            color = primaryColor,
+                            radius = dropRadius,
+                            center = Offset(hx, hy)
+                        )
+                    }
+
+                    drawOrbit(orbit1Angle, r1, dropRadius = 7.dp.toPx())
+                    drawOrbit(orbit2Angle, r2, dropRadius = 5.5.dp.toPx())
+                    drawOrbit(orbit3Angle, r3, dropRadius = 4.dp.toPx())
                 }
 
-                // Ripple 2
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    val r2Scale = 0.8f + (2.5f - 0.8f) * rippleProgress2
-                    val r2Alpha = 0.5f * (1f - rippleProgress2)
-                    val radius = (size.minDimension / 2) * r2Scale
-                    drawCircle(
-                        color = primaryColor.copy(alpha = r2Alpha),
-                        radius = radius,
-                        style = Stroke(width = 2.dp.toPx())
-                    )
-                }
-
-                // Central Circle Card for Blood Drop Icon
+                // Layer 2 – Central glowing core card
                 Surface(
                     modifier = Modifier
-                        .size(96.dp)
-                        .scale(pulseScale),
+                        .size(80.dp)
+                        .scale(coreScale),
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                    color = surfaceLow,
                     border = androidx.compose.foundation.BorderStroke(
-                        1.dp,
-                        MaterialTheme.colorScheme.outlineVariant
+                        1.5.dp,
+                        Brush.sweepGradient(
+                            listOf(
+                                primaryColor.copy(alpha = 0.0f),
+                                primaryColor.copy(alpha = 0.7f),
+                                primaryColor,
+                                primaryColor.copy(alpha = 0.7f),
+                                primaryColor.copy(alpha = 0.0f)
+                            )
+                        )
                     ),
-                    shadowElevation = 2.dp
+                    shadowElevation = 6.dp
                 ) {
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Bloodtype,
-                            contentDescription = null,
-                            tint = primaryColor,
-                            modifier = Modifier
-                                .size(48.dp)
-                                .alpha(pulseAlpha)
+                        Text(
+                            text = "🩸",
+                            fontSize = 36.sp,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(36.dp))
 
-            // Textual feedback
+            // ── Rotating status text ─────────────────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(64.dp), // Fixed height to prevent layout shifting
+                    .height(68.dp),
                 contentAlignment = Alignment.Center
             ) {
                 AnimatedContent(
                     targetState = statuses[currentStatusIndex],
                     transitionSpec = {
-                        fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                        fadeIn(animationSpec = tween(350)) togetherWith fadeOut(animationSpec = tween(350))
                     },
                     label = "status_transition"
                 ) { status ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
                             text = status.main,
-                            style = MaterialTheme.typography.headlineSmall.copy(
+                            style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 20.sp,
                                 lineHeight = 28.sp
                             ),
                             textAlign = TextAlign.Center
                         )
                         Text(
                             text = status.sub,
-                            style = MaterialTheme.typography.bodyMedium.copy(
+                            style = MaterialTheme.typography.bodySmall.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             ),
                             textAlign = TextAlign.Center
@@ -228,13 +287,13 @@ fun FindingBloodBanksScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-            // Indeterminate Progress Indicator (matching HTML style)
+            // ── Thin animated progress bar ───────────────────────────────────
             Box(
                 modifier = Modifier
-                    .width(192.dp)
-                    .height(4.dp)
+                    .width(200.dp)
+                    .height(3.dp)
                     .background(
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
                         shape = CircleShape
@@ -249,7 +308,7 @@ fun FindingBloodBanksScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Branding Footer
+            // ── Branding footer ──────────────────────────────────────────────
             Column(
                 modifier = Modifier
                     .navigationBarsPadding()
@@ -258,26 +317,24 @@ fun FindingBloodBanksScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "VITALFLOW",
+                    text = "🩸 RAKTASEWA",
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 2.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.primary
                     )
                 )
-
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .alpha(dotAlpha)
-                            .background(primaryColor, shape = CircleShape)
+                    Text(
+                        text = "🩸",
+                        fontSize = 12.sp,
+                        modifier = Modifier.alpha(dotAlpha)
                     )
                     Text(
-                        text = "Secure Connection Established",
+                        text = Loc.t("secure_conn", language),
                         style = MaterialTheme.typography.labelMedium.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
@@ -292,6 +349,6 @@ fun FindingBloodBanksScreen(
 @Composable
 fun FindingBloodBanksScreenPreview() {
     RaktaSewaTheme {
-        FindingBloodBanksScreen(selectedBloodGroup = "O+")
+        FindingBloodBanksScreen(selectedBloodGroup = "O+", language = "en")
     }
 }

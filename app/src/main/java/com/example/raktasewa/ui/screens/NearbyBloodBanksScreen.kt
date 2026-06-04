@@ -2,7 +2,6 @@ package com.example.raktasewa.ui.screens
 
 import android.content.Intent
 import android.net.Uri
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -30,16 +29,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.raktasewa.data.BloodBankResponse
 import com.example.raktasewa.ui.theme.PrimaryFixed
 import com.example.raktasewa.ui.theme.RaktaSewaTheme
-import kotlin.math.roundToInt
 
 data class BloodBank(
     val name: String,
-    val distance: Double,
+    val distance: Double?,
     val stockStatus: StockStatus,
     val units: Int,
-    val phone: String = "+977-1-4262226"
+    val phone: String = "",
+    val address: String = "",
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0
 )
 
 enum class StockStatus(val label: String, val color: Color, val dotColor: Color) {
@@ -48,64 +50,68 @@ enum class StockStatus(val label: String, val color: Color, val dotColor: Color)
     CRITICAL("Critical", Color(0xFFB7102A), Color(0xFFB7102A))
 }
 
+/**
+ * Convert API response models to display-ready BloodBank objects.
+ */
+private fun BloodBankResponse.toBloodBank(): BloodBank {
+    val qty = quantity?.toInt() ?: 0
+    val status = when {
+        qty >= 10 -> StockStatus.HIGH_STOCK
+        qty >= 3 -> StockStatus.LOW_STOCK
+        else -> StockStatus.CRITICAL
+    }
+    return BloodBank(
+        name = name,
+        distance = null, // API doesn't provide distance; could compute client-side
+        stockStatus = status,
+        units = qty,
+        phone = contact ?: "",
+        address = address ?: "",
+        latitude = latitude,
+        longitude = longitude
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NearbyBloodBanksScreen(
     selectedBloodGroup: String,
+    language: String,
+    bloodBanks: List<BloodBankResponse>,
+    errorMessage: String?,
     onBackClick: () -> Unit,
-    onProfileClick: () -> Unit,
+    onRetryClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf("All Banks") }
+    var selectedFilterKey by remember { mutableStateOf("all_banks") }
 
-    val filters = listOf("All Banks", "Nearest First", "Open Now", "Emergency Priority")
-
-    val bankNames = remember {
-        listOf(
-            "City Central Red Cross", "Mercy General Blood Bank", "Lifeline Hematology Center",
-            "Community Wellness Blood Unit", "Metro Trauma Blood Services", "Northside Transfusion Lab",
-            "St. Jude Regional Center", "Eastern Star Blood Bank", "United Care Resources",
-            "Phoenix Medical Storage", "River Valley Donors", "Silver Lake Clinic",
-            "Grand Horizon Hospital", "Pioneer Valley Blood", "Crestwood Urgent Care",
-            "Summit Medical Blood Bank", "Oakridge Donor Hub", "Harbor View Lab",
-            "Westfield Hematology", "Beacon Light Resources"
-        )
+    val filterKeys = remember {
+        listOf("all_banks", "nearest_first", "open_now", "emergency_priority")
     }
 
-    val allBanks = remember(selectedBloodGroup) {
-        bankNames.mapIndexed { index, name ->
-            val distance = ((0.5 + (index * 0.4)) * 10).roundToInt() / 10.0
-            val status = when (index % 3) {
-                0 -> StockStatus.HIGH_STOCK
-                1 -> StockStatus.LOW_STOCK
-                else -> StockStatus.CRITICAL
-            }
-            val units = when (status) {
-                StockStatus.HIGH_STOCK -> (20..45).random()
-                StockStatus.LOW_STOCK -> (2..8).random()
-                StockStatus.CRITICAL -> (0..1).random()
-            }
-            BloodBank(name, distance, status, units)
-        }
+    // Convert API response to display models
+    val allBanks = remember(bloodBanks) {
+        bloodBanks.map { it.toBloodBank() }
     }
 
     // Filter and Sort banks based on selection
-    val filteredBanks = remember(searchQuery, selectedFilter, allBanks) {
+    val filteredBanks = remember(searchQuery, selectedFilterKey, allBanks) {
         var list = allBanks.filter {
-            it.name.contains(searchQuery, ignoreCase = true)
+            it.name.contains(searchQuery, ignoreCase = true) ||
+            it.address.contains(searchQuery, ignoreCase = true)
         }
 
-        when (selectedFilter) {
-            "Nearest First" -> {
-                list = list.sortedBy { it.distance }
+        when (selectedFilterKey) {
+            "nearest_first" -> {
+                list = list.sortedBy { it.distance ?: Double.MAX_VALUE }
             }
-            "Open Now" -> {
-                // For mock, let's say odd index blood banks are open/available
-                list = list.filterIndexed { idx, _ -> idx % 2 != 0 }
+            "open_now" -> {
+                // Show banks with stock available
+                list = list.filter { it.units > 0 }
             }
-            "Emergency Priority" -> {
+            "emergency_priority" -> {
                 // Show Critical and Low stock first
                 list = list.sortedWith(compareBy<BloodBank> {
                     when (it.stockStatus) {
@@ -113,7 +119,7 @@ fun NearbyBloodBanksScreen(
                         StockStatus.LOW_STOCK -> 1
                         StockStatus.HIGH_STOCK -> 2
                     }
-                }.thenBy { it.distance })
+                })
             }
         }
         list
@@ -123,14 +129,24 @@ fun NearbyBloodBanksScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(
-                        text = "VitalFlow",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = (-0.5).sp
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "🩸",
+                            fontSize = 24.sp,
+                            modifier = Modifier.padding(end = 6.dp)
                         )
-                    )
+                        Text(
+                            text = "RaktaSewa",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = (-0.5).sp
+                            )
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(
@@ -140,23 +156,11 @@ fun NearbyBloodBanksScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
-                actions = {
-                    IconButton(
-                        onClick = onProfileClick,
-                        modifier = Modifier.padding(end = 4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AccountCircle,
-                            contentDescription = "Profile",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                },
+                actions = {},
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -165,6 +169,104 @@ fun NearbyBloodBanksScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
+
+        // Error state — show error message with retry button
+        if (errorMessage != null && bloodBanks.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    Text(
+                        text = "⚠️",
+                        fontSize = 48.sp
+                    )
+                    Text(
+                        text = Loc.t("error_title", language),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                    Button(
+                        onClick = onRetryClick,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = Loc.t("retry", language),
+                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
+                }
+            }
+            return@Scaffold
+        }
+
+        // Empty state — no banks found (but no error)
+        if (bloodBanks.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    Text(text = "🩸", fontSize = 48.sp)
+                    Text(
+                        text = Loc.t("no_banks_found", language),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = Loc.t("no_banks_sub", language),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                    OutlinedButton(
+                        onClick = onRetryClick,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(Loc.t("retry", language))
+                    }
+                }
+            }
+            return@Scaffold
+        }
+
+        // Success state — show the blood bank list
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -179,7 +281,7 @@ fun NearbyBloodBanksScreen(
                     onValueChange = { searchQuery = it },
                     placeholder = {
                         Text(
-                            text = "Search blood banks near you...",
+                            text = Loc.t("search_placeholder", language),
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             )
@@ -214,8 +316,8 @@ fun NearbyBloodBanksScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    items(filters) { filter ->
-                        val isSelected = selectedFilter == filter
+                    items(filterKeys) { filterKey ->
+                        val isSelected = selectedFilterKey == filterKey
                         val containerColor = if (isSelected) {
                             MaterialTheme.colorScheme.primary
                         } else {
@@ -230,12 +332,12 @@ fun NearbyBloodBanksScreen(
                         Surface(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
-                                .clickable { selectedFilter = filter },
+                                .clickable { selectedFilterKey = filterKey },
                             color = containerColor,
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = filter,
+                                text = Loc.t(filterKey, language),
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Bold
                                 ),
@@ -247,7 +349,7 @@ fun NearbyBloodBanksScreen(
                 }
             }
 
-            // Hero Summary Bento Box (Conditional based on selected group O-)
+            // Results count badge
             item {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -264,7 +366,9 @@ fun NearbyBloodBanksScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Critical Need: O-",
+                                text = Loc.t("results_found", language)
+                                    .replace("{count}", filteredBanks.size.toString())
+                                    .replace("{group}", selectedBloodGroup),
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
@@ -272,17 +376,16 @@ fun NearbyBloodBanksScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "3 banks requesting O negative.",
+                                text = Loc.t("results_sub", language),
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
                                 )
                             )
                         }
-                        Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                            modifier = Modifier.size(40.dp)
+                        Text(
+                            text = "🩸",
+                            fontSize = 36.sp,
+                            modifier = Modifier.padding(end = 8.dp)
                         )
                     }
                 }
@@ -292,12 +395,20 @@ fun NearbyBloodBanksScreen(
             items(filteredBanks) { bank ->
                 BloodBankCard(
                     bank = bank,
+                    language = language,
                     onCallClick = {
-                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${bank.phone}"))
-                        context.startActivity(intent)
+                        if (bank.phone.isNotBlank()) {
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${bank.phone}"))
+                            context.startActivity(intent)
+                        }
                     },
                     onDirectionsClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=${Uri.encode(bank.name)}"))
+                        val geoUri = if (bank.latitude != 0.0 && bank.longitude != 0.0) {
+                            "geo:${bank.latitude},${bank.longitude}?q=${Uri.encode(bank.name)}"
+                        } else {
+                            "geo:0,0?q=${Uri.encode(bank.name + " " + bank.address)}"
+                        }
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(geoUri))
                         context.startActivity(intent)
                     }
                 )
@@ -309,6 +420,7 @@ fun NearbyBloodBanksScreen(
 @Composable
 fun BloodBankCard(
     bank: BloodBank,
+    language: String,
     onCallClick: () -> Unit,
     onDirectionsClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -341,22 +453,50 @@ fun BloodBankCard(
                         overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = "${bank.distance} km away",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+
+                    // Show address if available
+                    if (bank.address.isNotBlank()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.size(16.dp)
                             )
-                        )
+                            Text(
+                                text = bank.address,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
+                    // Show phone if available
+                    if (bank.phone.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Phone,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = bank.phone,
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            )
+                        }
                     }
                 }
 
@@ -367,13 +507,19 @@ fun BloodBankCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(bank.stockStatus.dotColor, shape = CircleShape)
-                    )
                     Text(
-                        text = "${bank.stockStatus.label} • ${bank.units} ${if (bank.units == 1) "Unit" else "Units"}",
+                        text = "🩸",
+                        fontSize = 12.sp
+                    )
+                    val stockLabelKey = when (bank.stockStatus) {
+                        StockStatus.HIGH_STOCK -> "high_stock"
+                        StockStatus.LOW_STOCK -> "low_stock"
+                        StockStatus.CRITICAL -> "critical"
+                    }
+                    val stockLabel = Loc.t(stockLabelKey, language)
+                    val unitLabel = if (bank.units == 1) Loc.t("unit", language) else Loc.t("units", language)
+                    Text(
+                        text = "$stockLabel • ${bank.units} $unitLabel",
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = bank.stockStatus.color
@@ -391,6 +537,7 @@ fun BloodBankCard(
             ) {
                 OutlinedButton(
                     onClick = onCallClick,
+                    enabled = bank.phone.isNotBlank(),
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp),
@@ -407,7 +554,7 @@ fun BloodBankCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Call",
+                        text = Loc.t("call", language),
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
                     )
                 }
@@ -430,7 +577,7 @@ fun BloodBankCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Directions",
+                        text = Loc.t("directions", language),
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
                     )
                 }
@@ -445,8 +592,23 @@ fun NearbyBloodBanksScreenPreview() {
     RaktaSewaTheme {
         NearbyBloodBanksScreen(
             selectedBloodGroup = "O-",
+            language = "en",
+            bloodBanks = listOf(
+                BloodBankResponse(
+                    bloodBankId = "1",
+                    name = "City Central Red Cross",
+                    latitude = 27.71,
+                    longitude = 85.32,
+                    imageUrl = null,
+                    address = "Anamnagar, Kathmandu",
+                    contact = "9870545658",
+                    type = "O-",
+                    quantity = 25.0
+                )
+            ),
+            errorMessage = null,
             onBackClick = {},
-            onProfileClick = {}
+            onRetryClick = {}
         )
     }
 }
